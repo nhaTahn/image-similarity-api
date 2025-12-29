@@ -17,6 +17,8 @@ const elements = {
   swapBtn: document.getElementById("swapBtn"),
   threshold: document.getElementById("threshold"),
   thresholdValue: document.getElementById("thresholdValue"),
+  modeSelect: document.getElementById("modeSelect"),
+  modelSelect: document.getElementById("modelSelect"),
   scoreValue: document.getElementById("scoreValue"),
   scoreLabel: document.getElementById("scoreLabel"),
   scoreBar: document.getElementById("scoreBar"),
@@ -101,6 +103,54 @@ function updateThresholdLabel() {
   }
 }
 
+function populateSelect(select, options, defaultName) {
+  select.innerHTML = "";
+  options.forEach((optionItem) => {
+    const option = document.createElement("option");
+    option.value = optionItem.name;
+    option.textContent = optionItem.label || optionItem.name;
+    if (optionItem.name === defaultName) {
+      option.selected = true;
+    }
+    select.appendChild(option);
+  });
+}
+
+function populateModelSelect(models, defaultName) {
+  elements.modelSelect.innerHTML = "";
+  populateSelect(elements.modelSelect, models, defaultName);
+  elements.model.textContent = elements.modelSelect.value || defaultName;
+}
+
+function populateModeSelect(modes, defaultName) {
+  populateSelect(elements.modeSelect, modes, defaultName);
+}
+
+async function loadModels() {
+  const fallbackModels = [
+    { name: "openai/clip-vit-base-patch32", label: "CLIP ViT-B/32 (fast)" },
+    { name: "openai/clip-vit-large-patch14", label: "CLIP ViT-L/14 (higher quality)" },
+  ];
+  const fallbackModes = [
+    { name: "semantic", label: "Semantic (CLIP)" },
+    { name: "strict", label: "Strict (image hash)" },
+    { name: "hybrid", label: "Hybrid (CLIP + hash)" },
+  ];
+
+  try {
+    const response = await fetch("/models");
+    if (!response.ok) {
+      throw new Error("Failed to load models");
+    }
+    const data = await response.json();
+    populateModelSelect(data.models || fallbackModels, data.default || fallbackModels[0].name);
+    populateModeSelect(data.modes || fallbackModes, data.default_mode || fallbackModes[0].name);
+  } catch (error) {
+    populateModelSelect(fallbackModels, fallbackModels[0].name);
+    populateModeSelect(fallbackModes, fallbackModes[0].name);
+  }
+}
+
 function updateScore(score) {
   state.lastScore = score;
   const normalized = Math.max(-1, Math.min(1, score));
@@ -120,6 +170,8 @@ async function compareImages() {
   const formData = new FormData();
   formData.append("image1", state.file1, state.file1.name);
   formData.append("image2", state.file2, state.file2.name);
+  formData.append("model_name", elements.modelSelect.value);
+  formData.append("mode", elements.modeSelect.value);
 
   elements.compareBtn.disabled = true;
   elements.compareBtn.classList.add("loading");
@@ -147,7 +199,15 @@ async function compareImages() {
     updateScore(data.similarity_score);
     elements.device.textContent = data.device;
     elements.model.textContent = data.model_name;
-    setStatus("Done. Adjust the threshold to label the result.", "success");
+    const parts = [];
+    if (data.semantic_similarity !== null && data.semantic_similarity !== undefined) {
+      parts.push(`semantic: ${data.semantic_similarity.toFixed(4)}`);
+    }
+    if (data.hash_similarity !== null && data.hash_similarity !== undefined) {
+      parts.push(`hash: ${data.hash_similarity.toFixed(4)}`);
+    }
+    const extra = parts.length ? ` (${parts.join(", ")})` : "";
+    setStatus(`Done. Adjust the threshold to label the result.${extra}`, "success");
   } catch (error) {
     setStatus(`Error: ${error.message}`, "error");
   } finally {
@@ -168,7 +228,11 @@ elements.swapBtn.addEventListener("click", () => {
 
 elements.compareBtn.addEventListener("click", compareImages);
 elements.threshold.addEventListener("input", updateThresholdLabel);
+elements.modelSelect.addEventListener("change", () => {
+  elements.model.textContent = elements.modelSelect.value;
+});
 
 bindDropzone(elements.input1, elements.dropzone1, 1);
 bindDropzone(elements.input2, elements.dropzone2, 2);
 updateThresholdLabel();
+loadModels();

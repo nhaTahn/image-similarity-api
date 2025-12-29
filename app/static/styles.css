@@ -232,6 +232,11 @@ body::after {
   align-items: center;
 }
 
+.control-stack {
+  display: grid;
+  gap: 16px;
+}
+
 .threshold label {
   display: flex;
   gap: 8px;
@@ -248,6 +253,31 @@ body::after {
   width: 100%;
   margin-top: 10px;
   accent-color: var(--accent);
+}
+
+.mode-select label,
+.model-select label {
+  display: block;
+  font-weight: 600;
+  margin-bottom: 8px;
+}
+
+.mode-select select,
+.model-select select {
+  width: 100%;
+  padding: 10px 12px;
+  border-radius: 12px;
+  border: 1px solid var(--border);
+  background: #fff;
+  font-family: inherit;
+  font-size: 0.95rem;
+}
+
+.mode-hint,
+.model-hint {
+  margin: 8px 0 0;
+  color: var(--muted);
+  font-size: 0.85rem;
 }
 
 .actions {
