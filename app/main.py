@@ -3,9 +3,12 @@ FastAPI application exposing an image similarity endpoint backed by CLIP.
 """
 
 import io
+from pathlib import Path
 from typing import Optional
 
 from fastapi import FastAPI, File, HTTPException, UploadFile, status
+from fastapi.responses import FileResponse
+from fastapi.staticfiles import StaticFiles
 from PIL import Image
 
 from app.models import SimilarityResponse
@@ -17,6 +20,11 @@ app = FastAPI(
     version="0.1.0",
 )
 
+BASE_DIR = Path(__file__).resolve().parent
+STATIC_DIR = BASE_DIR / "static"
+
+app.mount("/static", StaticFiles(directory=STATIC_DIR), name="static")
+
 similarity_model: Optional[ImageSimilarityModel] = None
 
 
@@ -25,6 +33,12 @@ async def load_model() -> None:
     """Load the CLIP model once at startup."""
     global similarity_model
     similarity_model = ImageSimilarityModel(device=select_device())
+
+
+@app.get("/", response_class=FileResponse, status_code=status.HTTP_200_OK)
+async def index() -> FileResponse:
+    """Serve the simple UI for uploading images."""
+    return FileResponse(STATIC_DIR / "index.html")
 
 
 @app.post("/compare", response_model=SimilarityResponse, status_code=status.HTTP_200_OK)
@@ -63,4 +77,3 @@ async def health() -> dict[str, str]:
     """Lightweight health check endpoint."""
     device = similarity_model.device if similarity_model else "uninitialized"
     return {"status": "ok", "device": device}
-

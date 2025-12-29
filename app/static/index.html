@@ -1,0 +1,111 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Image Similarity Studio</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Fraunces:wght@400;600;700&family=Space+Grotesk:wght@400;500;600&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="/static/styles.css" />
+  </head>
+  <body>
+    <main class="page">
+      <header class="hero">
+        <div class="hero__text">
+          <p class="eyebrow">CLIP similarity studio</p>
+          <h1>Compare two images with a single upload.</h1>
+          <p class="lead">
+            Drop images, press compare, and inspect the cosine similarity score. The UI
+            uses a clean CLIP baseline with device auto-selection.
+          </p>
+        </div>
+        <div class="hero__meta">
+          <div class="chip">
+            <span class="chip__label">Device</span>
+            <span id="device" class="chip__value">auto</span>
+          </div>
+          <div class="chip">
+            <span class="chip__label">Model</span>
+            <span id="model" class="chip__value">openai/clip-vit-base-patch32</span>
+          </div>
+        </div>
+      </header>
+
+      <section class="panel">
+        <div class="upload-grid">
+          <div class="upload-card">
+            <input id="image1" type="file" accept="image/*" />
+            <label class="dropzone" id="dropzone1" for="image1">
+              <div class="dropzone__content">
+                <span class="dropzone__title">Image A</span>
+                <span class="dropzone__hint">Drop or click to upload</span>
+              </div>
+              <div class="dropzone__meta">
+                <span id="fileName1" class="dropzone__filename">No file selected</span>
+                <span class="dropzone__action">Replace</span>
+              </div>
+              <img id="preview1" alt="Preview for image A" />
+            </label>
+          </div>
+
+          <div class="upload-card">
+            <input id="image2" type="file" accept="image/*" />
+            <label class="dropzone" id="dropzone2" for="image2">
+              <div class="dropzone__content">
+                <span class="dropzone__title">Image B</span>
+                <span class="dropzone__hint">Drop or click to upload</span>
+              </div>
+              <div class="dropzone__meta">
+                <span id="fileName2" class="dropzone__filename">No file selected</span>
+                <span class="dropzone__action">Replace</span>
+              </div>
+              <img id="preview2" alt="Preview for image B" />
+            </label>
+          </div>
+        </div>
+
+        <div class="controls">
+          <div class="threshold">
+            <label for="threshold">
+              Similarity threshold
+              <span id="thresholdValue" class="threshold__value">0.75</span>
+            </label>
+            <input id="threshold" type="range" min="0" max="1" step="0.01" value="0.75" />
+          </div>
+          <div class="actions">
+            <button id="swapBtn" class="button button--ghost" type="button">Swap images</button>
+            <button id="compareBtn" class="button button--primary" type="button">Compare</button>
+          </div>
+        </div>
+      </section>
+
+      <section class="result">
+        <div class="score-card">
+          <div class="score">
+            <div id="scoreValue" class="score__value">--</div>
+            <div id="scoreLabel" class="score__label">Waiting for images</div>
+          </div>
+          <div class="bar">
+            <div id="scoreBar" class="bar__fill" style="width: 0%"></div>
+          </div>
+          <p id="statusMsg" class="status">Upload two images to begin.</p>
+        </div>
+
+        <aside class="tips">
+          <h2>Notes</h2>
+          <ul>
+            <li>Identical images should score close to 1.0.</li>
+            <li>Use the slider to set your own similarity threshold.</li>
+            <li>Heavier models can improve quality at the cost of speed.</li>
+          </ul>
+        </aside>
+      </section>
+    </main>
+
+    <script src="/static/app.js"></script>
+  </body>
+</html>

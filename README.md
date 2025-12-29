@@ -4,6 +4,7 @@ FastAPI service that compares two images using CLIP embeddings and returns a cos
 
 ## Features
 - `/compare` endpoint accepts two image uploads and returns a similarity score, model name, and device.
+- Simple web UI at `/` for drag-and-drop uploads and live results.
 - Automatic device choice: CUDA on Windows (when available), MPS on Apple Silicon macOS, otherwise CPU.
 - Dockerfile for containerized runs on macOS and Windows.
 - Minimal test client in `tests/test_api.py` that crafts sample images and hits the API.
@@ -30,7 +31,7 @@ FastAPI service that compares two images using CLIP embeddings and returns a cos
      -F "image2=@/path/to/image_b.jpg"
    ```
 
-4. Optional: run the test client (server must be running):
+4. Optional: open the UI at `http://localhost:8000/` or run the test client (server must be running):
    ```bash
    python tests/test_api.py
    ```
@@ -53,6 +54,10 @@ docker run --rm -p 8000:8000 image-similarity-api
 app/
   main.py            # FastAPI app and routes
   similarity.py      # CLIP loading + similarity scoring
+  static/
+    index.html       # Simple UI
+    styles.css       # UI styling
+    app.js           # UI interactions
   models/
     schemas.py       # Pydantic response models
 requirements.txt     # Runtime dependencies
@@ -69,4 +74,3 @@ tests/test_api.py    # Simple client for exercising the API
     "model_name": "openai/clip-vit-base-patch32"
   }
   ```
-
