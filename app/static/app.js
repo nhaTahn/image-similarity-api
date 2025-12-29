@@ -18,7 +18,12 @@ const elements = {
   threshold: document.getElementById("threshold"),
   thresholdValue: document.getElementById("thresholdValue"),
   modeSelect: document.getElementById("modeSelect"),
+  featureSelect: document.getElementById("featureSelect"),
   modelSelect: document.getElementById("modelSelect"),
+  matchSelect: document.getElementById("matchSelect"),
+  matchBtn: document.getElementById("matchBtn"),
+  matchImage: document.getElementById("matchImage"),
+  matchInfo: document.getElementById("matchInfo"),
   scoreValue: document.getElementById("scoreValue"),
   scoreLabel: document.getElementById("scoreLabel"),
   scoreBar: document.getElementById("scoreBar"),
@@ -135,6 +140,11 @@ async function loadModels() {
     { name: "semantic", label: "Semantic (CLIP)" },
     { name: "strict", label: "Strict (image hash)" },
     { name: "hybrid", label: "Hybrid (CLIP + hash)" },
+    { name: "feature", label: "Feature (ORB/SIFT match)" },
+  ];
+  const fallbackMatchMethods = [
+    { name: "orb", label: "ORB (fast)" },
+    { name: "sift", label: "SIFT (higher quality)" },
   ];
 
   try {
@@ -145,20 +155,28 @@ async function loadModels() {
     const data = await response.json();
     populateModelSelect(data.models || fallbackModels, data.default || fallbackModels[0].name);
     populateModeSelect(data.modes || fallbackModes, data.default_mode || fallbackModes[0].name);
+    const featureDefault =
+      data.default_feature_method || data.default_match_method || fallbackMatchMethods[0].name;
+    populateSelect(elements.featureSelect, data.match_methods || fallbackMatchMethods, featureDefault);
+    populateSelect(elements.matchSelect, data.match_methods || fallbackMatchMethods, featureDefault);
   } catch (error) {
     populateModelSelect(fallbackModels, fallbackModels[0].name);
     populateModeSelect(fallbackModes, fallbackModes[0].name);
+    populateSelect(elements.featureSelect, fallbackMatchMethods, fallbackMatchMethods[0].name);
+    populateSelect(elements.matchSelect, fallbackMatchMethods, fallbackMatchMethods[0].name);
   }
 }
 
 function updateScore(score) {
   state.lastScore = score;
-  const normalized = Math.max(-1, Math.min(1, score));
-  const percent = ((normalized + 1) / 2) * 100;
+  const clamped = Math.max(-1, Math.min(1, score));
+  const normalized = (clamped + 1) / 2;
+  const percent = normalized * 100;
   const threshold = Number(elements.threshold.value);
   elements.scoreValue.textContent = score.toFixed(4);
   elements.scoreBar.style.width = `${percent}%`;
-  elements.scoreLabel.textContent = score >= threshold ? "Likely similar" : "Likely different";
+  elements.scoreLabel.textContent =
+    normalized >= threshold ? "Likely similar" : "Likely different";
 }
 
 async function compareImages() {
@@ -172,6 +190,7 @@ async function compareImages() {
   formData.append("image2", state.file2, state.file2.name);
   formData.append("model_name", elements.modelSelect.value);
   formData.append("mode", elements.modeSelect.value);
+  formData.append("feature_method", elements.featureSelect.value);
 
   elements.compareBtn.disabled = true;
   elements.compareBtn.classList.add("loading");
@@ -206,6 +225,15 @@ async function compareImages() {
     if (data.hash_similarity !== null && data.hash_similarity !== undefined) {
       parts.push(`hash: ${data.hash_similarity.toFixed(4)}`);
     }
+    if (data.feature_similarity !== null && data.feature_similarity !== undefined) {
+      parts.push(`feature: ${data.feature_similarity.toFixed(4)}`);
+    }
+    if (data.feature_match_count !== null && data.feature_match_count !== undefined) {
+      parts.push(`matches: ${data.feature_match_count}`);
+    }
+    if (data.feature_inlier_count !== null && data.feature_inlier_count !== undefined) {
+      parts.push(`inliers: ${data.feature_inlier_count}`);
+    }
     const extra = parts.length ? ` (${parts.join(", ")})` : "";
     setStatus(`Done. Adjust the threshold to label the result.${extra}`, "success");
   } catch (error) {
@@ -213,6 +241,51 @@ async function compareImages() {
   } finally {
     elements.compareBtn.disabled = false;
     elements.compareBtn.classList.remove("loading");
+  }
+}
+
+async function generateMatchMap() {
+  if (!state.file1 || !state.file2) {
+    elements.matchInfo.textContent = "Please upload two images first.";
+    return;
+  }
+
+  const formData = new FormData();
+  formData.append("image1", state.file1, state.file1.name);
+  formData.append("image2", state.file2, state.file2.name);
+  formData.append("method", elements.matchSelect.value);
+
+  elements.matchBtn.disabled = true;
+  elements.matchBtn.classList.add("loading");
+  elements.matchInfo.textContent = "Generating match map...";
+
+  try {
+    const response = await fetch("/match", {
+      method: "POST",
+      body: formData,
+    });
+
+    if (!response.ok) {
+      let detail = response.statusText;
+      try {
+        const data = await response.json();
+        detail = data.detail || detail;
+      } catch (error) {
+        const text = await response.text();
+        detail = text || detail;
+      }
+      throw new Error(detail);
+    }
+
+    const data = await response.json();
+    elements.matchImage.src = `data:image/png;base64,${data.image_base64}`;
+    elements.matchImage.classList.add("visible");
+    elements.matchInfo.textContent = `Matches: ${data.match_count} | Keypoints: ${data.keypoints_a} vs ${data.keypoints_b}`;
+  } catch (error) {
+    elements.matchInfo.textContent = `Error: ${error.message}`;
+  } finally {
+    elements.matchBtn.disabled = false;
+    elements.matchBtn.classList.remove("loading");
   }
 }
 
@@ -231,6 +304,17 @@ elements.threshold.addEventListener("input", updateThresholdLabel);
 elements.modelSelect.addEventListener("change", () => {
   elements.model.textContent = elements.modelSelect.value;
 });
+elements.featureSelect.addEventListener("change", () => {
+  if (elements.matchSelect.value !== elements.featureSelect.value) {
+    elements.matchSelect.value = elements.featureSelect.value;
+  }
+});
+elements.matchSelect.addEventListener("change", () => {
+  if (elements.featureSelect.value !== elements.matchSelect.value) {
+    elements.featureSelect.value = elements.matchSelect.value;
+  }
+});
+elements.matchBtn.addEventListener("click", generateMatchMap);
 
 bindDropzone(elements.input1, elements.dropzone1, 1);
 bindDropzone(elements.input2, elements.dropzone2, 2);

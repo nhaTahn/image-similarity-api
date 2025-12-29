@@ -25,6 +25,7 @@ ALLOWED_MODES = {
     "semantic": "Semantic (CLIP)",
     "strict": "Strict (image hash)",
     "hybrid": "Hybrid (CLIP + hash)",
+    "feature": "Feature (ORB/SIFT match)",
 }
 
 

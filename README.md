@@ -4,7 +4,8 @@ FastAPI service that compares two images using CLIP embeddings and returns a cos
 
 ## Features
 - `/compare` endpoint accepts two image uploads and returns a similarity score, model name, and device.
-- Simple web UI at `/` for drag-and-drop uploads, similarity mode selection, model selection, and live results.
+- Simple web UI at `/` for drag-and-drop uploads, similarity mode selection (semantic/strict/hybrid/feature), model selection, and live results.
+- Feature matching visualization endpoint `/match` (ORB/SIFT) for match map previews.
 - Automatic device choice: CUDA on Windows (when available), MPS on Apple Silicon macOS, otherwise CPU.
 - Dockerfile for containerized runs on macOS and Windows.
 - Minimal test client in `tests/test_api.py` that crafts sample images and hits the API.
@@ -60,13 +61,14 @@ app/
     app.js           # UI interactions
   models/
     schemas.py       # Pydantic response models
+  feature_match.py   # ORB/SIFT feature matching
 requirements.txt     # Runtime dependencies
 Dockerfile           # Container build
 tests/test_api.py    # Simple client for exercising the API
 ```
 
 ## Endpoint
-- `POST /compare`: multipart form with `image1` and `image2` files. Returns JSON:
+- `POST /compare`: multipart form with `image1`, `image2`, `mode`, and optional `feature_method` (`orb` or `sift`). Returns JSON:
   ```json
   {
     "similarity_score": 0.87,
@@ -74,6 +76,21 @@ tests/test_api.py    # Simple client for exercising the API
     "model_name": "openai/clip-vit-base-patch32",
     "mode": "semantic",
     "semantic_similarity": 0.87,
-    "hash_similarity": 0.42
+    "hash_similarity": 0.42,
+    "feature_similarity": 0.76,
+    "feature_method": "orb",
+    "feature_match_count": 42,
+    "feature_inlier_count": 30
+  }
+  ```
+
+- `POST /match`: multipart form with `image1`, `image2`, and `method` (`orb` or `sift`). Returns JSON:
+  ```json
+  {
+    "method": "orb",
+    "match_count": 42,
+    "keypoints_a": 180,
+    "keypoints_b": 205,
+    "image_base64": "<base64 png>"
   }
   ```

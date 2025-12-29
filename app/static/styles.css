@@ -256,6 +256,7 @@ body::after {
 }
 
 .mode-select label,
+.feature-select label,
 .model-select label {
   display: block;
   font-weight: 600;
@@ -263,6 +264,7 @@ body::after {
 }
 
 .mode-select select,
+.feature-select select,
 .model-select select {
   width: 100%;
   padding: 10px 12px;
@@ -274,6 +276,7 @@ body::after {
 }
 
 .mode-hint,
+.feature-hint,
 .model-hint {
   margin: 8px 0 0;
   color: var(--muted);
@@ -418,6 +421,80 @@ body::after {
   color: var(--muted);
 }
 
+.match-panel {
+  animation: riseIn 0.9s ease 0.3s both;
+}
+
+.match-card {
+  background: var(--card);
+  border-radius: var(--radius);
+  padding: 26px;
+  border: 1px solid var(--border);
+  box-shadow: var(--shadow);
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.match-header {
+  display: grid;
+  grid-template-columns: minmax(0, 1.3fr) minmax(0, 0.7fr);
+  gap: 20px;
+  align-items: center;
+}
+
+.match-header h2 {
+  font-family: "Fraunces", "Georgia", serif;
+  margin: 8px 0;
+}
+
+.match-controls {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.match-controls label {
+  font-weight: 600;
+}
+
+.match-controls select {
+  width: 100%;
+  padding: 10px 12px;
+  border-radius: 12px;
+  border: 1px solid var(--border);
+  background: #fff;
+  font-family: inherit;
+  font-size: 0.95rem;
+}
+
+.match-info {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.9rem;
+}
+
+.match-image {
+  border-radius: 18px;
+  border: 1px dashed var(--border);
+  background: #fbfaf7;
+  min-height: 240px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+
+.match-image img {
+  width: 100%;
+  height: auto;
+  display: none;
+}
+
+.match-image img.visible {
+  display: block;
+}
+
 @keyframes riseIn {
   from {
     opacity: 0;
@@ -440,7 +517,8 @@ body::after {
 
 @media (max-width: 900px) {
   .hero,
-  .result {
+  .result,
+  .match-header {
     grid-template-columns: 1fr;
   }
 

@@ -82,6 +82,11 @@
               <select id="modeSelect"></select>
               <p class="mode-hint">Hybrid balances CLIP with image hash for stricter results.</p>
             </div>
+            <div class="feature-select">
+              <label for="featureSelect">Feature method</label>
+              <select id="featureSelect"></select>
+              <p class="feature-hint">Used for Feature mode and match map.</p>
+            </div>
             <div class="model-select">
               <label for="modelSelect">Model selection</label>
               <select id="modelSelect"></select>
@@ -115,6 +120,29 @@
             <li>Heavier models can improve quality at the cost of speed.</li>
           </ul>
         </aside>
+      </section>
+
+      <section class="match-panel">
+        <div class="match-card">
+          <div class="match-header">
+            <div>
+              <p class="eyebrow">Feature matching</p>
+              <h2>Match map preview</h2>
+              <p class="lead">
+                Visualize keypoint matches between the two images using ORB or SIFT.
+              </p>
+            </div>
+            <div class="match-controls">
+              <label for="matchSelect">Match method</label>
+              <select id="matchSelect"></select>
+              <button id="matchBtn" class="button button--primary" type="button">Generate match map</button>
+              <p id="matchInfo" class="match-info">No match map generated yet.</p>
+            </div>
+          </div>
+          <div class="match-image">
+            <img id="matchImage" alt="Feature match visualization" />
+          </div>
+        </div>
       </section>
     </main>
 

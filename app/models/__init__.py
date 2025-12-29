@@ -1,6 +1,5 @@
 """Pydantic models for the API."""
 
-from .schemas import SimilarityResponse
+from .schemas import MatchResponse, SimilarityResponse
 
-__all__ = ["SimilarityResponse"]
-
+__all__ = ["MatchResponse", "SimilarityResponse"]
